@@ -74,6 +74,8 @@ class ColumnTableTest {
         val grandsonColumnsHighlight = 12
         val maxColumnGrandSon = MAX_COLUMNS
 
+
+
         tableRobot(composeTestRule) {
             clickOnHeaderElement(firstTableId, 0, 0)
             for (i in 0 until sonColumnsHighlight) {
@@ -102,6 +104,9 @@ class ColumnTableTest {
             }
         }
     }
+
+
+
 
     @Test
     fun shouldAssertHeaderColumnColorsEvenOdd() {

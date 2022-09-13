@@ -119,23 +119,27 @@ class TableRobot(
         composeTestRule.onNodeWithTag(INPUT_TEST_FIELD_TEST_TAG).performClick()
     }
 
-    private fun clearInput() {
+    fun clearInput() {
         composeTestRule.onNodeWithTag(INPUT_TEST_FIELD_TEST_TAG).performTextClearance()
     }
 
-    private fun typeInput(text: String) {
+    fun assertBottomBarIsVisible(){
+        composeTestRule.onNodeWithTag(INPUT_TEST_FIELD_TEST_TAG).assertIsDisplayed()
+    }
+
+    fun typeInput(text: String) {
         composeTestRule.onNodeWithTag(INPUT_TEST_FIELD_TEST_TAG).performTextInput(text)
     }
 
-    private fun clickOnAccept() {
+    fun clickOnAccept() {
         composeTestRule.onNodeWithTag(INPUT_TEST_FIELD_TEST_TAG).performImeAction()
     }
 
-    private fun assertInputComponentIsDisplayed() {
+    fun assertInputComponentIsDisplayed() {
         composeTestRule.onNodeWithTag(INPUT_TEST_TAG).assertIsDisplayed()
     }
 
-    private fun assertInputIcon(@DrawableRes id: Int) {
+    fun assertInputIcon(@DrawableRes id: Int) {
         composeTestRule.onNode(SemanticsMatcher.expectValue(DrawableId, id)).assertExists()
     }
 }
