@@ -4,11 +4,11 @@ source config.init
 
 # Upload app and testing apk
 echo "Uploading app APK to Browserstack..."
-upload_app_response="$(curl -u $browserstack_username:$browserstack_access_key -X POST https://api-cloud.browserstack.com/app-automate/upload -F file=@$app_apk_path)"
+upload_app_response="$(curl -u $BROWSERSTACK_CREDENTIALS -X POST https://api-cloud.browserstack.com/app-automate/upload -F file=@$app_apk_path)"
 app_url=$(echo "$upload_app_response" | jq .app_url)
 
 echo "Uploading test APK to Browserstack..."
-upload_test_response="$(curl -u $browserstack_username:$browserstack_access_key -X POST https://api-cloud.browserstack.com/app-automate/espresso/test-suite -F file=@$test_apk_path)"
+upload_test_response="$(curl -u $BROWSERSTACK_CREDENTIALS -X POST https://api-cloud.browserstack.com/app-automate/espresso/test-suite -F file=@$test_apk_path)"
 test_url=$(echo "$upload_test_response" | jq .test_url)
 
 #Check total builds running
@@ -62,7 +62,7 @@ echo "Monitoring build status started...."
 while [[ $build_status = "running" ]];
 do
   # Get build status
-  build_status_response="$(curl -u "$browserstack_username:$browserstack_access_key" -X GET "https://api-cloud.browserstack.com/app-automate/espresso/builds/$build_id")"
+  build_status_response="$(curl -u "$BROWSERSTACK_CREDENTIALS" -X GET "https://api-cloud.browserstack.com/app-automate/espresso/builds/$build_id")"
   build_status=$(echo "$build_status_response" | jq -r .status)
   echo "current build status: $build_status"
 
