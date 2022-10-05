@@ -41,16 +41,38 @@ data class TableModel(
         }
     }
 
-    fun tableErrorCell(): TableCell? =
+    fun getNextCell(
+        tableCell: TableCell
+    ): TableCell? = when {
+        tableCell.row == null || tableCell.column == null -> null
+        tableRows[tableCell.row].values[tableCell.column]?.error != null ->
+            tableRows[tableCell.row].values[tableCell.column]
+        tableCell.column < tableHeaderModel.tableMaxColumns() - 1 ->
+            tableRows[tableCell.row].values[tableCell.column + 1]
+        tableCell.row < tableRows.size - 1 ->
+            tableRows[tableCell.row + 1].values[0]
+        else -> null
+    }?.let {
+        when {
+            !it.editable -> getNextCell(it)
+            else -> it
+        }
+    }
+
+    fun cellHasError(cell: TableSelection.CellSelection): TableCell? =
+        tableRows[cell.rowIndex].values[cell.columnIndex]?.takeIf { it.error != null }
+
+    fun clearErrors(): List<TableRowModel> =
         tableRows.map { row ->
-            row.values.filter { it.value.error != null }
-                .values.firstOrNull()
-        }.firstOrNull()
+            row.copy(values = row.values.mapValues { it.value.copy(error = null) })
+        }
 
     fun hasCellWithId(cellId: String?): Boolean {
-        return tableRows.find {
-            cellId?.contains(it.rowHeader.id.toString()) == true
-        } != null
+        return tableRows.any { row ->
+            row.rowHeader.id?.let {
+              it.isNotEmpty() && cellId?.contains(it) == true
+            } ?: false
+        }
     }
 }
 

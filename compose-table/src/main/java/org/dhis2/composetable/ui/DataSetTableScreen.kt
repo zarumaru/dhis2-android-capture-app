@@ -41,10 +41,11 @@ import org.dhis2.composetable.model.TextInputModel
 @Composable
 fun DataSetTableScreen(
     tableData: List<TableModel>,
+    currentCellSelected: TableCell?,
     onCellClick: (tableId: String, TableCell) -> TextInputModel?,
     onEdition: (editing: Boolean) -> Unit,
     onCellValueChange: (TableCell) -> Unit,
-    onSaveValue: (TableCell) -> Unit
+    onSaveValue: (TableCell, moveToNext: Boolean) -> Unit
 ) {
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
@@ -109,41 +110,28 @@ fun DataSetTableScreen(
         }
     }
 
-    val selectNextCell: (
-        Pair<TableCell, TableSelection.CellSelection>,
-        TableSelection.CellSelection
-    ) -> Unit = { (tableCell, nextCell), cellSelected ->
-        if (nextCell != cellSelected) {
-            tableSelection = nextCell
-            onCellClick(tableSelection.tableId, tableCell)?.let { inputModel ->
-                currentCell = tableCell
+    LaunchedEffect(currentCellSelected) {
+        currentCellSelected?.let { selectedCell ->
+            (tableSelection as? TableSelection.CellSelection)?.let {
+                tableSelection = it.copy(
+                    columnIndex = selectedCell.column ?: -1,
+                    rowIndex = selectedCell.row ?: -1
+                )
+            }
+            onCellClick(tableSelection.tableId, selectedCell)?.let { inputModel ->
+                currentCell = selectedCell
                 currentInputType = inputModel
                 focusRequester.requestFocus()
-            } ?: collapseBottomSheet()
-        } else {
-            updateError(tableCell)
-        }
+            }
+        } ?: collapseBottomSheet(finish = true)
     }
-
-    var nextSelected by remember { mutableStateOf(false) }
 
     var saveClicked by remember { mutableStateOf(false) }
-
-    if (tableData.isNotEmpty() && nextSelected) {
-        (tableSelection as? TableSelection.CellSelection)?.let { cellSelected ->
-
-            val currentTable = tableData.first { it.id == cellSelected.tableId }
-            currentTable.getNextCell(cellSelected)?.let {
-                selectNextCell(it, cellSelected)
-            } ?: collapseBottomSheet(finish = true)
-        }
-        nextSelected = false
-    }
 
     if (saveClicked) {
         (tableSelection as? TableSelection.CellSelection)?.let { cellSelected ->
             val currentTable = tableData.firstOrNull { it.id == cellSelected.tableId }
-            currentTable?.tableErrorCell()?.let {
+            currentTable?.cellHasError(cellSelected)?.let {
                 updateError(it)
                 saveClicked = false
             }
@@ -179,12 +167,12 @@ fun DataSetTableScreen(
                 },
                 onSave = {
                     currentCell?.let {
-                        onSaveValue(it)
+                        onSaveValue(it, false)
                     }
                     saveClicked = true
                 },
                 onNextSelected = {
-                    nextSelected = true
+                    currentCell?.let { onSaveValue(it, true) }
                 },
                 focusRequester = focusRequester
             )
@@ -225,8 +213,8 @@ fun DataSetTableScreen(
                 }
 
                 override fun onClick(tableCell: TableCell) {
-                    currentCell?.takeIf { it != tableCell }?.let {
-                        onSaveValue(it)
+                    currentCell?.takeIf { it != tableCell && it.error == null }?.let {
+                        onSaveValue(it, false)
                     }
                     onCellClick(tableSelection.tableId, tableCell)?.let { inputModel ->
                         currentCell = tableCell

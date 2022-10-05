@@ -35,6 +35,10 @@ class DataValuePresenter(
 
     private val dataSetInfo = repository.getDataSetInfo()
 
+    private var _tableCellSelection = MutableLiveData<TableCell>()
+    val tableCellSelection: LiveData<TableCell>
+        get() = _tableCellSelection
+
     fun init() {
         disposable.add(
             Flowable.fromCallable {
@@ -105,7 +109,8 @@ class DataValuePresenter(
                 tableModel.copy(
                     overwrittenValues = mapOf(
                         Pair(tableCell.column!!, tableCell)
-                    )
+                    ),
+                    tableRows = tableModel.clearErrors()
                 )
             } else {
                 tableModel
@@ -171,10 +176,15 @@ class DataValuePresenter(
         return repository.getDataElement(dataElementUid)
     }
 
-    fun onSaveValueChange(cell: TableCell) {
+    fun onSaveValueChange(cell: TableCell, moveToNext: Boolean = false) {
         runBlocking {
             saveValue(cell)
             view.onValueProcessed()
+        }
+        if (moveToNext) {
+            _tableCellSelection.value = allTableState.value
+                ?.find { tableModel -> tableModel.hasCellWithId(cell.id) }
+                ?.getNextCell(cell)
         }
     }
 
@@ -203,7 +213,7 @@ class DataValuePresenter(
                 errors[cell.id!!] =
                     storeResult.valueStoreResultMessage ?: "-"
             } else {
-                errors.remove(cell.id!!)
+                errors.clear()
             }
             updateData(catComboUid!!)
         }

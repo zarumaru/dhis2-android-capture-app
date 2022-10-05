@@ -96,9 +96,12 @@ class DataSetSectionFragment : FragmentGlobalAbstract(), DataValueContract.View 
                 MdcTheme {
                     val tableData by presenterFragment.tableData()
                         .observeAsState(emptyList())
+                    val tableSelection by presenterFragment.tableCellSelection
+                        .observeAsState(null)
 
                     DataSetTableScreen(
                         tableData = tableData,
+                        currentCellSelected = tableSelection,
                         onCellClick = { _, cell ->
                             presenterFragment.onCellClick(cell = cell)
                         },
@@ -108,8 +111,8 @@ class DataSetSectionFragment : FragmentGlobalAbstract(), DataValueContract.View 
                         onCellValueChange = { cell ->
                             presenterFragment.onCellValueChanged(cell)
                         },
-                        onSaveValue = { cell ->
-                            presenterFragment.onSaveValueChange(cell)
+                        onSaveValue = { cell, moveToNext ->
+                            presenterFragment.onSaveValueChange(cell, moveToNext)
                         }
                     )
                 }
